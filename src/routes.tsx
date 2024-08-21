@@ -5,31 +5,34 @@ import Login from "./pages/admin-login/Login";
 import Dashboard from "./pages/dashboard/Dashboard";
 import AdminDashboardLayouts from "./components/AdminDashboardLayouts";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <UserLayout />,
-    children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-    ],
-  },
-  {
-    path: "/admin/login",
-    element: <Login />,
-  },
-  {
-    path: "/admin/dashboard",
-    element: <AdminDashboardLayouts />,
-    children: [
-      {
-        path: "/admin/dashboard",
-        element: <Dashboard />,
-      },
-    ],
-  },
-]);
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <UserLayout />,
+      children: [
+        {
+          path: "/",
+          element: <Home />,
+        },
+      ],
+    },
+    {
+      path: "/admin/login",
+      element: <Login />,
+    },
+    {
+      path: "/admin/dashboard",
+      element: <AdminDashboardLayouts />,
+      children: [
+        {
+          path: "/admin/dashboard",
+          element: <Dashboard />,
+        },
+      ],
+    },
+  ],
+  { basename: "/" }
+); // Update this if your app is not served from the root
 
 export default router;
