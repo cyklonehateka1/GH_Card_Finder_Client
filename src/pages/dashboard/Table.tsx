@@ -1,44 +1,48 @@
 import styled from "styled-components";
-import { AdminTableData } from "../../data/adminTableData";
-import React, { useEffect, useState } from "react";
-import { axiosInstance } from "../../utils/axios";
-import Cookies from "js-cookie";
+import { useState } from "react";
+import CardDetailsModal from "./CardDetailsModal";
+import { AddCardData } from "./AddDocumentModal";
 
-interface Data {
-  data: AdminTableData[];
+interface ModalContainerProps {
+  $hidden: boolean;
 }
 
-interface StatusCellProps {
-  $status: string;
+interface TableProps {
+  cardsData: AddCardData[];
 }
 
-// Usage
-const Table: React.FC<Data> = () => {
-  const [cardsData, setCardsData] = useState<AdminTableData[]>();
-
-  const authToken = Cookies.get("authToken");
-
-  useEffect(() => {
-    const getCards = async () => {
-      const response = await axiosInstance.get("/card/get-all", {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      setCardsData(response.data);
-      console.log(response.data);
-    };
-
-    getCards();
-  }, [authToken]);
+const Table = ({ cardsData }: TableProps) => {
+  const [viewCard, setViewCard] = useState<AddCardData | null>(null);
+  const [findModalOpen, setFindModalOpen] = useState(false);
 
   const headingData: string[] = [
     "Card type",
     "First name",
     "Last name",
     "ID number",
-    "Status",
     "Date reported",
     "Action",
   ];
+
+  const formatDate = (date: string | Date): string => {
+    const parsedDate = typeof date === "string" ? new Date(date) : date;
+
+    const day = String(parsedDate.getDate()).padStart(2, "0");
+    const month = String(parsedDate.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+    const year = parsedDate.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleCardView = (card: AddCardData) => {
+    setViewCard(card);
+    setFindModalOpen(true);
+  };
+
+  const handleFindModalOpen = (data: boolean) => {
+    setFindModalOpen(data);
+    if (!data) setViewCard(null); // Reset viewCard when closing modal
+  };
 
   return (
     <Wrapper>
@@ -56,7 +60,7 @@ const Table: React.FC<Data> = () => {
               cardsData.map((item) => (
                 <TableRow key={item.idNumber}>
                   <TableCell>
-                    <CardType>{item.cardType}</CardType>
+                    <CardType>{item.type}</CardType>
                   </TableCell>
                   <TableCell>
                     <OtherCellData>{item.firstName}</OtherCellData>
@@ -68,27 +72,33 @@ const Table: React.FC<Data> = () => {
                     <OtherCellData>{item.idNumber}</OtherCellData>
                   </TableCell>
                   <TableCell>
-                    <StatusCellData $status={item.status}>
-                      <StatusDot $status={item.status}></StatusDot>
-                      {item.statusText}
-                    </StatusCellData>
-                  </TableCell>
-                  <TableCell>
-                    <OtherCellData>{item.date}</OtherCellData>
+                    <OtherCellData>
+                      {formatDate(item.dateReported)}
+                    </OtherCellData>
                   </TableCell>
                   <ActionCell>
-                    <ActionText>{item.cardType}</ActionText>
+                    <ActionText onClick={() => handleCardView(item)}>
+                      View
+                    </ActionText>
                   </ActionCell>
                 </TableRow>
               ))}
           </tbody>
         </StyledTable>
       </TableContainer>
+      {viewCard && (
+        <ModalContainer $hidden={findModalOpen}>
+          <CardDetailsModal
+            modalOpen={handleFindModalOpen}
+            cardsData={viewCard}
+          />
+        </ModalContainer>
+      )}
     </Wrapper>
   );
 };
 
-// Define the styled components
+// Define the styled components (unchanged)
 const Wrapper = styled.div`
   width: 100%;
   border-radius: 5px;
@@ -98,6 +108,11 @@ const Wrapper = styled.div`
   @media (min-width: 768px) {
     max-height: 100vh;
   }
+`;
+
+const ModalContainer = styled.div<ModalContainerProps>`
+  display: ${(props: ModalContainerProps) =>
+    props.$hidden ? "block" : "none"};
 `;
 
 const TableContainer = styled.div``;
@@ -110,7 +125,7 @@ const StyledTable = styled.table`
 
 const TableHeading = styled.th`
   padding: 10px;
-  color: #333; /* text-primaryText */
+  color: #333;
   font-family: "Montserrat", sans-serif;
   font-weight: 600;
   font-size: 7px;
@@ -128,18 +143,18 @@ const TableHeading = styled.th`
 `;
 
 const TableRow = styled.tr`
-  border-bottom: 1px solid #f0f0f0; /* border-light-ash */
-  border-top: 1px solid #f0f0f0; /* border-light-ash */
+  border-bottom: 1px solid #f0f0f0;
+  border-top: 1px solid #f0f0f0;
   transition: background-color 0.3s ease-in-out;
 
   &:hover {
-    background-color: #f0f0f0; /* hover:bg-light-ash */
+    background-color: #f0f0f0;
   }
 `;
 
 const TableCell = styled.td`
   padding: 1.2rem 0;
-  color: #333; /* text-primaryText */
+  color: #333;
   font-family: "Montserrat", sans-serif;
   font-size: 8px;
 
@@ -192,45 +207,6 @@ const CardType = styled.span`
 const OtherCellData = styled.span`
   font-size: 0.7rem;
   font-weight: 500;
-`;
-
-const StatusCellData = styled.span<StatusCellProps>`
-  margin: 0 auto;
-  padding: 0.2rem 0.4rem;
-  font-size: 0.6rem;
-  font-weight: 500;
-  display: flex;
-  width: auto;
-  max-width: 7rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50px;
-  background-color: ${(props: StatusCellProps) =>
-    props.$status === "unreachable".toLocaleLowerCase()
-      ? "rgba(255, 250, 235, 1)"
-      : props.$status === "reached".toLocaleLowerCase()
-      ? "rgba(1, 181, 51, 0.07)"
-      : "rgba(244, 244, 245, 1)"};
-
-  color: ${(props: StatusCellProps) =>
-    props.$status === "unreachable".toLocaleLowerCase()
-      ? "rgba(181, 71, 8, 1)"
-      : props.$status === "reached".toLocaleLowerCase()
-      ? "rgba(0, 146, 6, 1)"
-      : "black"};
-`;
-
-const StatusDot = styled.span<StatusCellProps>`
-  width: 0.3rem;
-  height: 0.3rem;
-  border-radius: 50px;
-  margin-right: 0.4rem;
-  background-color: ${(props: StatusCellProps) =>
-    props.$status === "unreachable".toLocaleLowerCase()
-      ? "rgba(181, 71, 8, 1)"
-      : props.$status === "reached".toLocaleLowerCase()
-      ? "rgba(0, 146, 6, 1)"
-      : "black"};
 `;
 
 export default Table;

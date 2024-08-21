@@ -1,7 +1,6 @@
 import axios from "axios";
 
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000/api/",
-  timeout: 1000,
+  baseURL: "https://gh-card-finder-server.onrender.com/api/",
   headers: { "X-Custom-Header": "foobar" },
 });

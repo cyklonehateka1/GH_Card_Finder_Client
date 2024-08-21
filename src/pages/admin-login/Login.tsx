@@ -3,7 +3,7 @@ import woman from "../../assets/home_woman.png";
 import nia_logo from "../../assets/NIA_logo.png";
 import eye from "../../assets/eye.svg";
 import eye_slash from "../../assets/eyeslash.svg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { axiosInstance } from "../../utils/axios";
 import Cookies from "js-cookie";
@@ -27,6 +27,15 @@ const Login = () => {
     emailOrPhone: "",
     password: "",
   });
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    const userToken = Cookies.get("authToken");
+    if (userToken) {
+      navigate("admin/dashboard");
+    }
+  });
+
   useEffect(() => {
     if (formData.password !== "" && formData.emailOrPhone !== "") {
       setComplete(true);
@@ -37,6 +46,7 @@ const Login = () => {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    setError("");
     setFormData({ ...formData, [name]: value });
   };
 

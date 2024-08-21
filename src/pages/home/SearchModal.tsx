@@ -159,7 +159,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ modalOpen }) => {
                 onChange={handleCustomFormChange}
               />
               <InputField
-                type="text"
+                type="date"
                 placeholder="Date of Birth"
                 name="dob"
                 onChange={handleCustomFormChange}
@@ -190,7 +190,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ modalOpen }) => {
           {loading ? "Searching..." : "Search"}
         </Button>
         {searchMode === "simple" && (
-          <CustomText>Don’t remember your document ID?</CustomText>
+          <CustomText>Don't remember your document ID?</CustomText>
         )}
         {searchMode === "simple" ? (
           <CustomModalClickable

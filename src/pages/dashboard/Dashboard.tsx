@@ -3,7 +3,11 @@ import Topbar from "./Topbar";
 import search_icon from "../../assets/search_icon_grey.svg";
 import filter_icon from "../../assets/filter_icon.svg";
 import Table from "./Table";
-import { adminTableData } from "../../data/adminTableData";
+import AddDocumentModal, { AddCardData } from "./AddDocumentModal";
+import { useEffect, useState, useCallback } from "react";
+import { axiosInstance } from "../../utils/axios";
+import Cookies from "js-cookie";
+import _ from "lodash"; // Import lodash for debouncing
 
 const Container = styled.div`
   width: 100%;
@@ -102,7 +106,90 @@ const TableContainer = styled.div`
   padding: 0.5rem;
 `;
 
+const ModalContainer = styled.div<ModalContainerProps>`
+  display: ${(props: ModalContainerProps) =>
+    props.$hidden ? "block" : "none"};
+`;
+
+interface ModalContainerProps {
+  $hidden: boolean;
+}
+
 const Dashboard = () => {
+  const [findModalOpen, setFindModalOpen] = useState(false);
+  const [newCard, setNewCard] = useState<AddCardData | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [cardsData, setCardsData] = useState<AddCardData[]>([]);
+
+  const authToken = Cookies.get("authToken");
+
+  useEffect(() => {
+    const getCards = async () => {
+      try {
+        const response = await axiosInstance.get("/card/get-all", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        setCardsData(response.data);
+      } catch (error) {
+        console.error("Failed to fetch cards data", error);
+      }
+    };
+
+    getCards();
+  }, [authToken, newCard]);
+
+  const handleFormSubmit = (formData: AddCardData) => {
+    console.log("Form data received from child:", formData);
+    setNewCard(formData);
+  };
+
+  const handleFindModalOpen = (data: boolean) => {
+    setFindModalOpen(data);
+  };
+
+  const fetchSearchResults = async (searchQuery: string) => {
+    try {
+      if (searchQuery.trim() === "") {
+        const response = await axiosInstance.get("/card/get-all", {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        setCardsData(response.data);
+      } else {
+        const searchParams = new URLSearchParams();
+
+        // Assume that searchQuery is split by spaces into different search terms
+        const [idNumber, firstName, lastName, dob] = searchQuery.split(" ");
+
+        if (idNumber) searchParams.append("idNumber", idNumber);
+        if (firstName) searchParams.append("firstName", firstName);
+        if (lastName) searchParams.append("lastName", lastName);
+        if (dob) searchParams.append("dob", dob);
+
+        const queryString = searchParams.toString();
+
+        const response = await axiosInstance.get(`card/search?${queryString}`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+
+        setCardsData(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to search cards", error);
+      setCardsData([]); // Clear the table if no results found or if there's an error
+    }
+  };
+
+  const debouncedFetchSearchResults = useCallback(
+    _.debounce((query: string) => fetchSearchResults(query), 300),
+    []
+  );
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    debouncedFetchSearchResults(value);
+  };
+
   return (
     <Container>
       <Topbar />
@@ -110,7 +197,11 @@ const Dashboard = () => {
         <SearchFilterContainer>
           <SearchContainer>
             <SearchIcon src={search_icon} />
-            <SearchInput placeholder="Search for card" />
+            <SearchInput
+              placeholder="Search for card (ID, Name, DOB)"
+              value={searchInput}
+              onChange={handleSearchInputChange}
+            />
           </SearchContainer>
           <Right>
             <Filters>
@@ -118,16 +209,27 @@ const Dashboard = () => {
                 <FilterIcon src={filter_icon} />
                 All
               </Filter>
-              <FiltersNumber>4</FiltersNumber>
+              <FiltersNumber>{cardsData.length}</FiltersNumber>
             </Filters>
-            <AddNewCardBtn>Add new card +</AddNewCardBtn>
+            <AddNewCardBtn
+              onClick={() =>
+                findModalOpen ? setFindModalOpen(false) : setFindModalOpen(true)
+              }
+            >
+              Add new card +
+            </AddNewCardBtn>
           </Right>
         </SearchFilterContainer>
         <TableContainer>
-          <Table data={adminTableData} />{" "}
-          {/* Replace with your own Table component */}
+          <Table cardsData={cardsData} />
         </TableContainer>
       </Main>
+      <ModalContainer $hidden={findModalOpen}>
+        <AddDocumentModal
+          modalOpen={handleFindModalOpen}
+          onSubmit={handleFormSubmit}
+        />
+      </ModalContainer>
     </Container>
   );
 };
