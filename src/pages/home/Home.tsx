@@ -26,11 +26,6 @@ const Home = () => {
           <Link to="/">
             <Logo src={nia_logo} alt="company logo" />
           </Link>
-          <NavContainer>
-            <MenuLink to="/about">Home</MenuLink>
-            <MenuLink to="/products">News</MenuLink>
-            <MenuLink to="/contact">About</MenuLink>
-          </NavContainer>
         </NavLeft>
 
         <Right>
@@ -93,21 +88,8 @@ const NavLeft = styled.div`
   margin-left: 2rem;
 `;
 
-const NavContainer = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  font-family: "Montserrat", sans-serif;
-`;
-
 const Logo = styled.img`
   margin-right: 1rem;
-`;
-
-const MenuLink = styled(Link)`
-  margin-right: 1rem;
-  color: black;
-  text-decoration: none;
-  font-weight: 600;
 `;
 
 const Right = styled.div`
