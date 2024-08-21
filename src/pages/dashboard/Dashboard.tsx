@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback } from "react";
 import { axiosInstance } from "../../utils/axios";
 import Cookies from "js-cookie";
 import _ from "lodash"; // Import lodash for debouncing
+import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
   width: 100%;
@@ -122,6 +123,14 @@ const Dashboard = () => {
   const [cardsData, setCardsData] = useState<AddCardData[]>([]);
 
   const authToken = Cookies.get("authToken");
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    const userToken = Cookies.get("authToken");
+    if (!userToken) {
+      navigate("/admin/login");
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const getCards = async () => {

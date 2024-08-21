@@ -32,7 +32,7 @@ const Login = () => {
   useEffect(() => {
     const userToken = Cookies.get("authToken");
     if (userToken) {
-      navigate("admin/dashboard");
+      navigate("/admin/dashboard");
     }
   });
 
