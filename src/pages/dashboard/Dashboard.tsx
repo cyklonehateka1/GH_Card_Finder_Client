@@ -119,16 +119,18 @@ interface ModalContainerProps {
 const Dashboard = () => {
   const [findModalOpen, setFindModalOpen] = useState(false);
   const [newCard, setNewCard] = useState<AddCardData | null>(null);
-  const [searchInput, setSearchInput] = useState("");
+  const [searchParams, setSearchParams] = useState({
+    search: "",
+  });
   const [cardsData, setCardsData] = useState<AddCardData[]>([]);
 
   const authToken = Cookies.get("authToken");
-
   const navigate = useNavigate();
+
   useEffect(() => {
     const userToken = Cookies.get("authToken");
     if (!userToken) {
-      navigate("/admin/login");
+      navigate("/login");
     }
   }, [navigate]);
 
@@ -156,32 +158,21 @@ const Dashboard = () => {
     setFindModalOpen(data);
   };
 
-  const fetchSearchResults = async (searchQuery: string) => {
+  const fetchSearchResults = async () => {
     try {
-      if (searchQuery.trim() === "") {
-        const response = await axiosInstance.get("/card/get-all", {
+      const { search } = searchParams;
+      const queryString = new URLSearchParams({
+        search: encodeURIComponent(search),
+      }).toString();
+
+      const response = await axiosInstance.get(
+        `/card/admin/search?${queryString}`,
+        {
           headers: { Authorization: `Bearer ${authToken}` },
-        });
-        setCardsData(response.data);
-      } else {
-        const searchParams = new URLSearchParams();
+        }
+      );
 
-        // Assume that searchQuery is split by spaces into different search terms
-        const [idNumber, firstName, lastName, dob] = searchQuery.split(" ");
-
-        if (idNumber) searchParams.append("idNumber", idNumber);
-        if (firstName) searchParams.append("firstName", firstName);
-        if (lastName) searchParams.append("lastName", lastName);
-        if (dob) searchParams.append("dob", dob);
-
-        const queryString = searchParams.toString();
-
-        const response = await axiosInstance.get(`card/search?${queryString}`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-
-        setCardsData(response.data);
-      }
+      setCardsData(response.data);
     } catch (error) {
       console.error("Failed to search cards", error);
       setCardsData([]); // Clear the table if no results found or if there's an error
@@ -189,15 +180,18 @@ const Dashboard = () => {
   };
 
   const debouncedFetchSearchResults = useCallback(
-    _.debounce((query: string) => fetchSearchResults(query), 300),
-    []
+    _.debounce(() => fetchSearchResults(), 300),
+    [searchParams]
   );
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchInput(value);
-    debouncedFetchSearchResults(value);
+    const { name, value } = e.target;
+    setSearchParams((prevParams) => ({ ...prevParams, [name]: value }));
   };
+
+  useEffect(() => {
+    debouncedFetchSearchResults();
+  }, [searchParams, debouncedFetchSearchResults]);
 
   return (
     <Container>
@@ -207,8 +201,9 @@ const Dashboard = () => {
           <SearchContainer>
             <SearchIcon src={search_icon} />
             <SearchInput
-              placeholder="Search for card (ID, Name, DOB)"
-              value={searchInput}
+              placeholder="Search by ID, First or Last Name"
+              name="search"
+              value={searchParams.search}
               onChange={handleSearchInputChange}
             />
           </SearchContainer>

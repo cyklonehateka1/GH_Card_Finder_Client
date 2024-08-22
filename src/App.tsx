@@ -1,19 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
+import router from "./routes";
 import "./App.css";
-import Home from "./pages/home/Home";
-import Dashboard from "./pages/dashboard/Dashboard";
-import Login from "./pages/admin-login/Login";
 
 function App() {
-  return (
-    <Router basename="/">
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/admin/dashboard" element={<Dashboard />} />
-        <Route path="/admin/login" element={<Login />} />
-      </Routes>
-    </Router>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

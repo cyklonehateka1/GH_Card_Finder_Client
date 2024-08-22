@@ -1,7 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import styled from "styled-components";
-import { axiosInstance } from "../../utils/axios";
-import { CardDetails } from "../../types/cardDetails";
+import { axiosInstance } from "../../utils/axios"; // Assuming this type is defined correctly
 import axios from "axios";
 
 interface SearchModalProps {
@@ -19,20 +18,18 @@ interface CustomSearchForm {
 }
 
 interface ResponseData {
-  message: string;
-  data: CardDetails[];
+  idNumber: string;
+  profileImg: string;
+  locationOfDocument: string;
 }
 
 const SearchModal: React.FC<SearchModalProps> = ({ modalOpen }) => {
   const [searchMode, setSearchMode] = useState<string>("simple");
   const [error, setError] = useState<string>("");
-  const [complete, setComplete] = useState(false);
+  const [complete, setComplete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [idField, setIdField] = useState<string>("");
-  const [responseData, setResponseData] = useState<ResponseData>({
-    message: "",
-    data: [],
-  });
+  const [responseData, setResponseData] = useState<ResponseData[]>([]);
   const [customSearchFormInput, setCustomSearchFormInput] =
     useState<CustomSearchForm>({
       firstName: "",
@@ -91,25 +88,26 @@ const SearchModal: React.FC<SearchModalProps> = ({ modalOpen }) => {
 
     try {
       setLoading(true);
+      let response;
       if (searchMode === "custom") {
-        const response = await axiosInstance.get(
-          `card/search?firstName=${customSearchFormInput.firstName}&lastName=${customSearchFormInput.lastName}&dob=${customSearchFormInput.dob}`
+        response = await axiosInstance.get(
+          `card/search?firstName=${encodeURIComponent(
+            customSearchFormInput.firstName
+          )}&lastName=${encodeURIComponent(
+            customSearchFormInput.lastName
+          )}&dob=${encodeURIComponent(customSearchFormInput.dob)}`
         );
-        setResponseData(response.data);
-        setSearchMode("found");
-        setLoading(false);
-        setIdField(response.data.data[0].idNumber);
-        console.log(response);
-      } else if (searchMode === "simple") {
-        const response = await axiosInstance.get(
-          `card/search?idNumber=${idField}`
-        );
-        setResponseData(response.data);
-        setSearchMode("found");
-        setLoading(false);
-        setIdField(response.data.data[0].idNumber);
-        console.log(response);
+        // Assuming response.data is an array of ResponseData
+        setResponseData(response.data as ResponseData[]);
+      } else if (searchMode === "simple" || searchMode === "found") {
+        response = await axiosInstance.get(`card/get-one/${idField}`);
+        // Assuming response.data is a single ResponseData object
+        setResponseData([response.data as ResponseData]);
       }
+
+      setIdField(responseData[0].idNumber);
+
+      setSearchMode("found");
     } catch (error: unknown) {
       setLoading(false);
       if (axios.isAxiosError(error)) {
@@ -120,8 +118,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ modalOpen }) => {
       } else {
         setError("An unexpected error occurred");
       }
-
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -168,31 +167,33 @@ const SearchModal: React.FC<SearchModalProps> = ({ modalOpen }) => {
           )}
         </Form>
 
-        {searchMode === "found" && (
+        {searchMode === "found" && responseData.length > 0 && (
           <FoundTextContainer>
-            <FoundTextSpan>Document</FoundTextSpan>
-            <FoundText>found in the system</FoundText>
+            <FoundTextSpan>Location</FoundTextSpan>
+            <FoundText>{responseData[0].locationOfDocument}</FoundText>
           </FoundTextContainer>
         )}
-        {searchMode === "found" && (
-          <CardFounCointainer>
-            <FoundTextSpan>{responseData.data[0].idNumber}</FoundTextSpan>
+        {searchMode === "found" && responseData.length > 0 && (
+          <CardFoundContainer>
+            <FoundTextSpan>{responseData[0].idNumber}</FoundTextSpan>
             <CardImgContainer>
-              <CardImg src={responseData.data[0].profileImg} alt="Ghana card" />
-              <ClaimButton>Claim it now</ClaimButton>
+              <CardImg src={responseData[0].profileImg} alt="Ghana card" />
             </CardImgContainer>
-          </CardFounCointainer>
+          </CardFoundContainer>
         )}
 
         <ErrorMessage>{error}</ErrorMessage>
 
-        <Button type="submit" onClick={handleSubmit} $completed={complete}>
-          {loading ? "Searching..." : "Search"}
-        </Button>
+        {searchMode !== "found" && (
+          <Button type="submit" onClick={handleSubmit} $completed={complete}>
+            {loading ? "Searching..." : "Search"}
+          </Button>
+        )}
+
         {searchMode === "simple" && (
           <CustomText>Don't remember your document ID?</CustomText>
         )}
-        {searchMode === "simple" ? (
+        {searchMode === "simple" && (
           <CustomModalClickable
             onClick={() => {
               setError(""), setSearchMode("custom");
@@ -200,7 +201,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ modalOpen }) => {
           >
             Use custom search
           </CustomModalClickable>
-        ) : (
+        )}
+        {searchMode === "custom" && (
           <CustomModalClickable
             onClick={() => {
               setError(""), setSearchMode("simple");
@@ -300,15 +302,17 @@ const FoundTextContainer = styled.div`
 
 const FoundTextSpan = styled.span`
   font-weight: 600;
+  color: rgba(112, 122, 145, 1);
   font-size: 0.7rem;
 `;
 
 const FoundText = styled.p`
   margin-left: 0.4rem;
   font-size: 0.7rem;
+  font-weight: 600;
 `;
 
-const CardFounCointainer = styled.div`
+const CardFoundContainer = styled.div`
   border: 1px solid #e1e1ef;
   border-radius: 0.5rem;
   width: 100%;
@@ -325,13 +329,13 @@ const CardImg = styled.img`
   width: 100%;
 `;
 
-const ClaimButton = styled.button`
-  width: 100%;
-  background-color: #009206;
-  margin-top: 0.5rem;
-  color: white;
-  font-size: 0.8rem;
-  padding: 0.8rem 0;
-`;
+// const ClaimButton = styled.button`
+//   width: 100%;
+//   background-color: #009206;
+//   margin-top: 0.5rem;
+//   color: white;
+//   font-size: 0.8rem;
+//   padding: 0.8rem 0;
+// `;
 
 export default SearchModal;

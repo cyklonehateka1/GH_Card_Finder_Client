@@ -226,6 +226,19 @@ const AddDocumentModal: React.FC<SearchModalProps> = ({
         headers: { Authorization: "Bearer " + userToken },
       });
       onSubmit(requestBody);
+      setFormData({
+        firstName: "",
+        lastName: "",
+        dob: "",
+        type: "",
+        idNumber: "",
+        repoter_name: "",
+        repoter_phone: "",
+        repoter_address: "",
+        locationOfDocument: "",
+        profileImg: "",
+        dateReported: "",
+      });
       modalOpen(false);
       console.log(saveCard);
     } catch (error) {
