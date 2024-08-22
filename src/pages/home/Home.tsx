@@ -3,7 +3,7 @@ import homebg from "../../assets/homebg.png";
 import home_woman from "../../assets/home_woman.png";
 import SearchModal from "./SearchModal";
 import nia_logo from "../../assets/NIA_logo.png";
-import mglass_black from "../../assets/mglass_black.png";
+// import mglass_black from "../../assets/mglass_black.png";
 import mglass_white from "../../assets/mglass_white.png";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -29,10 +29,10 @@ const Home = () => {
         </NavLeft>
 
         <Right>
-          <ReportSearch>
+          {/* <ReportSearch>
             <SearchIcon src={mglass_black} alt="Search icon" />
             Report a missing ID
-          </ReportSearch>
+          </ReportSearch> */}
           <FindSearch
             onClick={() =>
               findModalOpen ? setFindModalOpen(false) : setFindModalOpen(true)
@@ -86,10 +86,19 @@ const NavLeft = styled.div`
   display: flex;
   align-items: center;
   margin-left: 2rem;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    margin-left: 0.5rem;
+  }
 `;
 
 const Logo = styled.img`
   margin-right: 1rem;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    margin-left: 0.5rem;
+    width: 5rem;
+  }
 `;
 
 const Right = styled.div`
@@ -97,6 +106,9 @@ const Right = styled.div`
   align-items: center;
   gap: 0.5rem;
   margin-right: 2rem;
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    margin-right: 0.5rem;
+  }
 `;
 
 const ReportSearch = styled.button`
@@ -108,6 +120,9 @@ const ReportSearch = styled.button`
   border: 1px solid black;
   height: 2rem;
   width: 11rem;
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    width: 8rem;
+  }
   justify-content: center;
   border-radius: 0.3rem;
   position: relative;
@@ -121,6 +136,10 @@ const FindSearch = styled(ReportSearch)`
   background-color: black;
   color: white;
   width: 9rem;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    width: 7rem;
+  }
 `;
 
 const SearchIcon = styled.img`
@@ -139,10 +158,22 @@ const Main = styled.main`
   display: flex;
   align-items: center;
   overflow: hidden;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    padding-top: 8rem;
+  }
 `;
 
 const Left = styled.div`
   width: 40%;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    width: 100%;
+  }
   /* border: 1px solid red; */
 `;
 
@@ -150,6 +181,10 @@ const Heading = styled.h1`
   font-size: 4rem;
   color: white;
   font-family: "Montserrat", sans-serif;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    font-size: 3rem;
+  }
 `;
 
 const SubHeading = styled.h5`
@@ -157,6 +192,10 @@ const SubHeading = styled.h5`
   color: #ffd600;
   font-family: "Montserrat", sans-serif;
   margin-bottom: 0.5rem;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    font-size: 0.7rem;
+  }
 `;
 
 const HeroButton = styled.button`
@@ -187,6 +226,10 @@ const HeroImg = styled.img`
   margin-top: 2rem;
   position: relative;
   top: 1rem;
+
+  @media only screen and (min-device-width: 100px) and (max-device-width: 600px) {
+    width: 100%;
+  }
 `;
 
 const ModalContainer = styled.div<ModalContainerProps>`

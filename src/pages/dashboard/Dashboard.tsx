@@ -105,6 +105,14 @@ const TableContainer = styled.div`
   height: 73vh;
   border-radius: 0.5rem;
   padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+`;
+
+const LoadingText = styled.h3`
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-align: center;
 `;
 
 const ModalContainer = styled.div<ModalContainerProps>`
@@ -119,6 +127,7 @@ interface ModalContainerProps {
 const Dashboard = () => {
   const [findModalOpen, setFindModalOpen] = useState(false);
   const [newCard, setNewCard] = useState<AddCardData | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useState({
     search: "",
   });
@@ -136,12 +145,15 @@ const Dashboard = () => {
 
   useEffect(() => {
     const getCards = async () => {
+      setLoading(true);
       try {
         const response = await axiosInstance.get("/card/get-all", {
           headers: { Authorization: `Bearer ${authToken}` },
         });
+        setLoading(false);
         setCardsData(response.data);
       } catch (error) {
+        setLoading(false);
         console.error("Failed to fetch cards data", error);
       }
     };
@@ -225,7 +237,11 @@ const Dashboard = () => {
           </Right>
         </SearchFilterContainer>
         <TableContainer>
-          <Table cardsData={cardsData} />
+          {loading ? (
+            <LoadingText>Loading...</LoadingText>
+          ) : (
+            <Table cardsData={cardsData} />
+          )}
         </TableContainer>
       </Main>
       <ModalContainer $hidden={findModalOpen}>
